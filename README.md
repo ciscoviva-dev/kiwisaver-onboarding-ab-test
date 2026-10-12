@@ -23,6 +23,10 @@ experiment design, Bayesian inference, a self-service dashboard, and a
 [**plain-English guide**](EXPLAINER.md) — the whole project explained without
 jargon, plus how to communicate it to non-technical stakeholders.
 
+🖼️ **Deck-ready one-slide summary:** [`reports/figures/one_slide_summary.png`](reports/figures/one_slide_summary.png)
+
+![One-slide summary](reports/figures/one_slide_summary.png)
+
 ---
 
 ## ⚠️ Framing (read first)
