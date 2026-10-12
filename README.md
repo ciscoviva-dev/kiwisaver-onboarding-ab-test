@@ -19,6 +19,10 @@ experiment design, Bayesian inference, a self-service dashboard, and a
 > reassurance, and re-evaluate — not ship to 100%. The full reasoning and an
 > interactive risk slider are in the dashboard.
 
+📖 **New to A/B testing or Bayesian inference?** Start with the
+[**plain-English guide**](EXPLAINER.md) — the whole project explained without
+jargon, plus how to communicate it to non-technical stakeholders.
+
 ---
 
 ## ⚠️ Framing (read first)
@@ -164,6 +168,8 @@ dbt/                DuckDB models: staging → intermediate → marts (+ tests, 
 app/dashboard.py    Streamlit self-service dashboard (4 panels + risk slider)
 tests/              dbt tests + pytest effect-recovery tests
 reports/            results.json, summary.md, figures/
+EXPLAINER.md        plain-English guide for non-technical stakeholders
+assumptions.md      every assumption, with its source
 ```
 
 Requires [`uv`](https://docs.astral.sh/uv/). One command builds everything:
