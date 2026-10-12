@@ -1,0 +1,27 @@
+# --- generated data & warehouse (regenerate with `make data`) ---
+data/raw/*.parquet
+*.duckdb
+*.duckdb.wal
+
+# --- dbt artifacts ---
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml
+
+# --- python ---
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- secrets / private ---
+.env
+interview_notes.md
+docs/interview_notes.md
+2026_senior_data_analyst_job_description.md
+
+# --- os ---
+.DS_Store
+Thumbs.db

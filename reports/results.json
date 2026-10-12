@@ -1,0 +1,129 @@
+{
+  "primary": {
+    "A": {
+      "n": 9980,
+      "converted": 3946,
+      "rate": 0.39539078156312624,
+      "posterior_alpha": 3950.0,
+      "posterior_beta": 6040.0,
+      "posterior_mean": 0.3953953953953954,
+      "credible_interval": [
+        0.38582339589460934,
+        0.40497682505285704
+      ]
+    },
+    "B": {
+      "n": 10023,
+      "converted": 4265,
+      "rate": 0.4255213010076823,
+      "posterior_alpha": 4269.0,
+      "posterior_beta": 5764.0,
+      "posterior_mean": 0.4254958636499552,
+      "credible_interval": [
+        0.41581473010799375,
+        0.43516508637732676
+      ]
+    }
+  },
+  "decision": {
+    "prob_b_beats_a": 0.999985,
+    "expected_loss_choosing_b": 2.1322327749514202e-08,
+    "expected_loss_choosing_a": 0.030086774152501477,
+    "abs_lift_mean": 0.030086752830173723,
+    "abs_lift_ci": [
+      0.01652141849638855,
+      0.04372703877784258
+    ],
+    "rel_lift_mean": 0.0762566249168579,
+    "rel_lift_ci": [
+      0.041078758911151585,
+      0.11248956162571849
+    ],
+    "prob_lift_gt_1pp": 0.99813,
+    "prob_lift_gt_2pp": 0.92715,
+    "baseline_rate": 0.3953953953953954
+  },
+  "frequentist": {
+    "z": 4.331382732785646,
+    "p_value": 1.481758579635617e-05,
+    "abs_lift": 0.03013051944455608,
+    "ci95": [
+      0.016502838670217575,
+      0.04375820021889459
+    ]
+  },
+  "guardrails": {
+    "A": {
+      "post_selection_abandonment_rate": 0.10751503006012024,
+      "fund_switch_regret_rate": 0.04206791687785099,
+      "fund_profile_mismatch_rate": 0.2080218778486782
+    },
+    "B": {
+      "post_selection_abandonment_rate": 0.14556520003990822,
+      "fund_switch_regret_rate": 0.09003516998827667,
+      "fund_profile_mismatch_rate": 0.10859437751004015
+    }
+  },
+  "commercial": {
+    "expected_aum_per_converter_nzd": 18230.490603142396,
+    "annual_revenue_per_member_nzd": 136.72867952356796,
+    "npv5_per_member_nzd": 521.5074360220258,
+    "incremental_members_annual": 15713.270347432228,
+    "first_year_revenue_full_rollout_nzd": 2148454.7056012447,
+    "npv5_full_rollout_nzd": 8194587.330410307,
+    "npv5_staged_25pct_nzd": 2048646.8326025768,
+    "staged_exposure": 0.25
+  },
+  "exec_summary": "Variant B lifts sign-up conversion from 39.54% to 42.55% (+3.01%, 95% CrI +1.65% to +4.37%), with a 100.0% probability of being the better arm. That is worth about 2,048,647 NZD in 5-year NPV at a staged 25% rollout (~15,713 members/yr annualised). But B also raises post-selection abandonment from 10.8% to 14.6% and 14-day fund-switch regret from 4.2% to 9.0% (it *improves* fund fit). Recommendation: Stage the rollout to 25% with a confirmation-step reassurance, then re-evaluate before scaling to 50% and 100%.",
+  "summary_payload": {
+    "primary": {
+      "control_rate": 0.3954,
+      "variant_rate": 0.4255
+    },
+    "decision": {
+      "abs_lift": 0.0301,
+      "abs_lift_ci95": [
+        0.0165,
+        0.0437
+      ],
+      "prob_b_beats_a": 1.0,
+      "expected_loss_choosing_b": 0.0
+    },
+    "frequentist": {
+      "z": 4.33,
+      "p_value": 1.481758579635617e-05
+    },
+    "guardrails": {
+      "abandonment": {
+        "A": 0.1075,
+        "B": 0.1456
+      },
+      "regret_14d": {
+        "A": 0.0421,
+        "B": 0.09
+      },
+      "fund_mismatch": {
+        "A": 0.208,
+        "B": 0.1086
+      }
+    },
+    "commercial": {
+      "incremental_members_annual": 15713,
+      "npv5_full_rollout_nzd": 8194587,
+      "npv5_staged_25pct_nzd": 2048647
+    },
+    "recommendation": "Stage the rollout to 25% with a confirmation-step reassurance, then re-evaluate before scaling to 50% and 100%."
+  },
+  "config": {
+    "prior": [
+      4.0,
+      6.0
+    ],
+    "sensitivity_prior": [
+      1.0,
+      1.0
+    ],
+    "credible": 0.95,
+    "n_draws": 200000
+  }
+}

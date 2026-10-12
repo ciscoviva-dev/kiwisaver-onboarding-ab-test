@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: stg_events
+    description: "Typed raw event stream with metadata unpacked."
+    columns:
+      - name: event_id
+        data_tests:
+          - unique
+          - not_null
+      - name: user_id
+        data_tests:
+          - not_null
+      - name: variant
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["A", "B"]
+      - name: event_name
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - viewed_kiwisaver_landing
+                  - started_questionnaire
+                  - completed_questionnaire
+                  - viewed_fund_selection
+                  - browsed_fund_list
+                  - completed_risk_quiz
+                  - selected_base_fund
+                  - added_self_select
+                  - confirmed_plan
+                  - submitted_application
+                  - transfer_balance_set
+                  - contribution_setup_completed
+                  - switched_base_fund
+
+  - name: stg_users
+    description: "Assignment and user attributes."
+    columns:
+      - name: user_id
+        data_tests:
+          - unique
+          - not_null
+      - name: variant
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["A", "B"]

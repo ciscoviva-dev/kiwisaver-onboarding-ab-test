@@ -1,0 +1,9 @@
+kiwisaver_ab:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # Single-file local warehouse (git-ignored). Path is relative to the
+      # directory dbt is invoked from (the repo root).
+      path: "warehouse.duckdb"
+      threads: 4

@@ -1,0 +1,24 @@
+name: "kiwisaver_ab"
+version: "1.0.0"
+profile: "kiwisaver_ab"
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Raw tables produced by src/simulate.py (paths relative to repo root).
+  raw_events: "data/raw/events.parquet"
+  raw_users: "data/raw/users.parquet"
+  # Primary metric window, in days from viewed_fund_selection.
+  conversion_window_days: 7
+
+models:
+  kiwisaver_ab:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: table
+    marts:
+      +materialized: table

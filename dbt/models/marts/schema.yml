@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: mart_experiment_users
+    description: "One row per assigned user with outcome flags; input to the Bayesian model."
+    columns:
+      - name: user_id
+        data_tests:
+          - unique
+          - not_null
+      - name: variant
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["A", "B"]
+
+  - name: mart_primary_metric
+    description: "Conversion within the window, by arm, among users who reached fund selection."
+    columns:
+      - name: variant
+        data_tests:
+          - unique
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["A", "B"]
+      - name: conversion_rate
+        data_tests:
+          - not_null
+
+  - name: mart_guardrails
+    description: "Abandonment, regret, and fund-mismatch rates by arm."
+    columns:
+      - name: variant
+        data_tests:
+          - unique
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["A", "B"]
+
+  - name: mart_cohorts
+    description: "Conversion by cohort segment (risk profile, new/existing, device, age)."
+    columns:
+      - name: variant
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["A", "B"]
+
+  - name: mart_funnel_steps
+    description: "Step-level funnel counts by arm."
+
+  - name: mart_commercial_inputs
+    description: "Transfer-balance and contribution-setup inputs to the commercial model."
