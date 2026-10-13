@@ -20,8 +20,9 @@ experiment design, Bayesian inference, readable notebooks, and a
 > the notebooks under [`docs/`](docs/index.html) walk through it in plain English.
 
 📓 **Read the analysis (plain English):** [`docs/index.html`](docs/index.html) —
-executed notebooks covering an EDA pass and the full A/B test, no stats
-background needed.
+executed notebooks covering an EDA pass, the full A/B test, and an extension into
+**multi-armed bandits / Thompson sampling** and the **"peeking" problem**. No
+stats background needed.
 
 🖼️ **Deck-ready one-slide summary:** [`reports/figures/one_slide_summary.png`](reports/figures/one_slide_summary.png)
 

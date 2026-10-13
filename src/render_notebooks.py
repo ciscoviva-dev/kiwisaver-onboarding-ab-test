@@ -25,6 +25,8 @@ NOTEBOOKS = [
      "Who the users are, where they drop off, and whether the experiment split was fair."),
     ("02_ab_test.ipynb", "Did the quiz help? (A/B test)",
      "The Bayesian result in plain English: how sure we are, the side effects, the money, and the recommendation."),
+    ("03_bandits_and_peeking.ipynb", "Bandits & the 'peeking' problem",
+     "Explore/exploit and Thompson sampling, plus a simulation showing why 'Bayesian' doesn't let you peek for free."),
 ]
 
 
