@@ -22,7 +22,13 @@ from pathlib import Path
 import duckdb
 import matplotlib
 
-matplotlib.use("Agg")
+# Use the headless Agg backend when run as a script, but leave the backend alone
+# inside a notebook (where `%matplotlib inline` must keep working). `get_ipython`
+# only exists in an IPython/Jupyter kernel.
+try:
+    get_ipython  # type: ignore[name-defined]  # noqa: B018
+except NameError:
+    matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
@@ -135,18 +141,10 @@ def commercial_model(primary: dict, commercial: dict) -> dict:
     }
 
 
-# --- executive summary (deterministic + optional LLM) ------------------------
+# --- plain-English summary ----------------------------------------------------
 RECOMMENDATION = (
     "Stage the rollout to 25% with a confirmation-step reassurance, then "
     "re-evaluate before scaling to 50% and 100%."
-)
-
-LLM_SYSTEM_PROMPT = (
-    "You are a senior data analyst writing a 3-4 sentence executive summary of an "
-    "A/B experiment for a non-technical leadership team. Use ONLY the numbers in the "
-    "supplied JSON -- never invent or round beyond what is given. Lead with the "
-    "primary result and its confidence, then the guardrail trade-off, then the "
-    "recommendation. Be direct and commercial. No bullet points, no headings, no hedging."
 )
 
 
@@ -194,35 +192,6 @@ def deterministic_summary(p: dict) -> str:
         f"{g['regret_14d']['A']:.1%} to {g['regret_14d']['B']:.1%} (it *improves* fund fit). "
         f"Recommendation: {p['recommendation']}"
     )
-
-
-def llm_summary(payload: dict, model: str | None = None) -> str | None:
-    """Return an LLM-written summary, or None if unavailable (no key / no SDK / error).
-
-    Never raises: any failure degrades gracefully to the deterministic summary.
-    """
-    import os
-
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        return None
-    try:
-        import anthropic
-    except ImportError:
-        return None
-    model = model or os.environ.get("ANTHROPIC_MODEL", "claude-3-5-haiku-latest")
-    try:
-        client = anthropic.Anthropic()
-        msg = client.messages.create(
-            model=model,
-            max_tokens=400,
-            system=LLM_SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": json.dumps(payload, indent=2)}],
-        )
-        return "".join(
-            b.text for b in msg.content if getattr(b, "type", "") == "text"
-        ).strip()
-    except Exception:
-        return None
 
 
 # --- figures -----------------------------------------------------------------
@@ -367,7 +336,7 @@ def main() -> None:
     fig_guardrails(guard, figdir)
     fig_cohorts(cohorts, figdir)
 
-    # exec-summary payload + deterministic text (LLM version is opt-in via the app)
+    # plain-English summary payload + text
     payload = summary_payload({"A": arm_a, "B": arm_b}, decision, freq, guard, commercial)
 
     # serialise (drop internal draws)
@@ -390,7 +359,7 @@ def main() -> None:
     with (out / "results.json").open("w", encoding="utf-8") as fh:
         json.dump(results, fh, indent=2)
 
-    # human summary (deterministic; the dashboard adds the optional LLM version)
+    # plain-English summary
     d = decision
     lines = [
         "# Results summary",

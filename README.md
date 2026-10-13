@@ -3,7 +3,7 @@
 A portfolio project modelling a real problem for a NZ wealth platform: users
 explore KiwiSaver but drop off at **fund selection**, paralysed by choice. It
 runs the whole loop a Senior Data Analyst owns — event tracking (SQL/dbt),
-experiment design, Bayesian inference, a self-service dashboard, and a
+experiment design, Bayesian inference, readable notebooks, and a
 **commercial recommendation with a staged rollout and a guardrail trade-off**.
 
 > ### TL;DR
@@ -17,11 +17,11 @@ experiment design, Bayesian inference, a self-service dashboard, and a
 >
 > **Recommendation: stage the rollout to 25%**, add a confirmation-step
 > reassurance, and re-evaluate — not ship to 100%. The full reasoning and an
-> interactive risk slider are in the dashboard.
+> the notebooks under [`docs/`](docs/index.html) walk through it in plain English.
 
-📖 **New to A/B testing or Bayesian inference?** Start with the
-[**plain-English guide**](EXPLAINER.md) — the whole project explained without
-jargon, plus how to communicate it to non-technical stakeholders.
+📓 **Read the analysis (plain English):** [`docs/index.html`](docs/index.html) —
+executed notebooks covering an EDA pass and the full A/B test, no stats
+background needed.
 
 🖼️ **Deck-ready one-slide summary:** [`reports/figures/one_slide_summary.png`](reports/figures/one_slide_summary.png)
 
@@ -91,7 +91,10 @@ raw events/users (parquet)
         ▼
 mart_experiment_users  ──►  Bayesian model (src/analyze.py)  ──►  results.json / figures
         │                                                         │
-        └────────────►  Streamlit dashboard (app/dashboard.py) ◄──┘
+        └────────────►  notebooks (notebooks/*.ipynb)  ◄──────────┘
+                              │  execute + render (src/render_notebooks.py)
+                              ▼
+                        docs/*.html   (plain-English, browser-readable, GitHub-Pages-ready)
 ```
 
 - **Bayesian conjugate Beta-Binomial** as the primary model (analytic update +
@@ -150,8 +153,8 @@ model uses a documented blended `0.75%` revenue rate on AUM (see
 **Stage the rollout to 25% + add a confirmation-step reassurance**, then
 re-evaluate before 50% → 100%. The expected loss on conversion is essentially
 zero, but the **2.1× regret** is a real trust cost that a full ship at once
-would lock in. In the dashboard, drag the "acceptable expected loss" slider to
-change the hold/25/50/100 call and see the guardrail gate fire.
+would lock in. [`notebooks/02_ab_test.ipynb`](notebooks/02_ab_test.ipynb) walks
+through the reasoning in plain English.
 
 ## 7. What I'd do next
 
@@ -169,25 +172,24 @@ ground_truth.yaml   true parameters of the simulation (oracle; not read by analy
 src/simulate.py     seeded synthetic event generator
 src/analyze.py      Bayesian + frequentist analysis, figures, results.json
 dbt/                DuckDB models: staging → intermediate → marts (+ tests, SRM check)
-app/dashboard.py    Streamlit self-service dashboard (4 panels + risk slider)
+notebooks/          EDA + Bayesian A/B analysis, written in plain English
+src/render_notebooks.py  executes the notebooks and renders them to HTML
+docs/               rendered notebooks (browser-readable; GitHub-Pages-ready)
 tests/              dbt tests + pytest effect-recovery tests
 reports/            results.json, summary.md, figures/
-EXPLAINER.md        plain-English guide for non-technical stakeholders
 assumptions.md      every assumption, with its source
 ```
 
 Requires [`uv`](https://docs.astral.sh/uv/). One command builds everything:
 
 ```bash
-make all      # data → models → report
-make app      # launch the dashboard
-make test     # dbt tests + pytest (effect recovery)
+make all        # data → models → report → notebooks
+make notebooks  # just re-render the notebooks to docs/*.html
+make test       # dbt tests + pytest (effect recovery)
 ```
 
-The dashboard's **Exec summary** panel is deterministic by default. Set
-`ANTHROPIC_API_KEY` (optionally `ANTHROPIC_MODEL`) to enable the "Write with
-Claude" button, which generates the summary from the live metrics only. Without
-a key the panel silently falls back to the template — the app never depends on it.
+Open [`docs/index.html`](docs/index.html) in a browser to read the analysis, or
+open the notebooks in `notebooks/` directly.
 
 <details>
 <summary>Windows / no <code>make</code>? Run the same steps directly.</summary>
@@ -197,7 +199,7 @@ uv sync
 uv run python src/simulate.py
 uv run dbt build --project-dir dbt --profiles-dir dbt
 uv run python src/analyze.py
-uv run streamlit run app/dashboard.py
+uv run python src/render_notebooks.py
 ```
 </details>
 
@@ -207,15 +209,15 @@ uv run streamlit run app/dashboard.py
 |---|---|
 | Confident using **SQL** | `dbt/models/` (staging → marts, window + `FILTER` SQL, JSON parsing) |
 | Hands-on **Python** | `src/simulate.py`, `src/analyze.py` (NumPy/SciPy/Pandas) |
-| Data visualisation & **interactive dashboards** | `app/dashboard.py` (beliefs/evidence/decision/guardrails) |
+| Data visualisation & **communicating results** | charts in `reports/figures/`; notebooks rendered to HTML in `docs/` |
 | Conducting **A/B tests** | experiment design, power/MDE, SRM check, frequentist + Bayesian |
 | Quantitative analysis in a **digital product** | event-based funnel, cohorts, device/segment cuts |
 | Product analytics & **event-based data** | raw event stream → `mart_experiment_users` |
 | **Snowflake** (nice-to-have) | dbt-on-DuckDB (same modelling paradigm; portable to Snowflake) |
 | **Analytics engineering** (nice-to-have) | dbt DAG + tests; `int_funnel`, `mart_*` |
-| **AI-enabled data tooling** (nice-to-have) | dashboard exec-summary panel: Claude writes the summary from the live numbers, with a deterministic fallback when no API key is present |
+| **AI-enabled data tooling** (nice-to-have) | built end-to-end with an AI coding agent (scaffold → models → notebooks); the repo is structured so a coding agent can drive it (`make all`) |
 | **Financial sector** (nice-to-have) | real fee/contribution/transfer domain modelling |
-| Communicate with impact | README + dashboard framing of a commercial decision |
+| Communicate with impact | README + plain-English notebooks + one-slide summary |
 
 ## 10. Limitations
 

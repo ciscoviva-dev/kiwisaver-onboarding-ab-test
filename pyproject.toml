@@ -14,11 +14,11 @@ dependencies = [
     "duckdb>=1.0",
     "dbt-duckdb>=1.8",
     "matplotlib>=3.8",
-    "plotly>=5.20",
-    "streamlit>=1.35",
     "jupyter>=1.0",
+    "jupyterlab>=4.0",
     "nbclient>=0.10",
-    "anthropic>=0.40",
+    "nbformat>=5.10",
+    "nbconvert>=7.16",
 ]
 
 [dependency-groups]
