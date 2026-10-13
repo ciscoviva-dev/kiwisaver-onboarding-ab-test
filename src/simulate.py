@@ -32,15 +32,15 @@ EXPERIMENT_STEP_ORDER = [
     "started_questionnaire",
     "completed_questionnaire",
     "viewed_fund_selection",
-    "browsed_fund_list",       # control intervention
-    "completed_risk_quiz",     # variant intervention
+    "browsed_fund_list",  # control intervention
+    "completed_risk_quiz",  # variant intervention
     "selected_base_fund",
     "added_self_select",
     "confirmed_plan",
     "submitted_application",
     "transfer_balance_set",
     "contribution_setup_completed",
-    "switched_base_fund",      # 14-day regret guardrail
+    "switched_base_fund",  # 14-day regret guardrail
 ]
 
 # The 11 real Sharesies KiwiSaver base funds, grouped by risk.
@@ -89,9 +89,7 @@ def make_users(truth: dict, rng: np.random.Generator) -> pd.DataFrame:
     start = pd.Timestamp(exp["start_date"], tz="UTC")
     duration = exp["duration_days"]
 
-    variant = rng.choice(
-        ["A", "B"], size=n, p=[exp["split"]["control"], exp["split"]["variant"]]
-    )
+    variant = rng.choice(["A", "B"], size=n, p=[exp["split"]["control"], exp["split"]["variant"]])
     # Users arrive uniformly across the experiment window.
     offset_hours = rng.uniform(0, duration * 24, size=n)
     assigned_at = start + pd.to_timedelta(offset_hours, unit="h")
@@ -116,9 +114,7 @@ def make_users(truth: dict, rng: np.random.Generator) -> pd.DataFrame:
     return users
 
 
-def _advance(
-    rng: np.random.Generator, truth: dict, cond_key: str, arm_row: pd.Series
-) -> bool:
+def _advance(rng: np.random.Generator, truth: dict, cond_key: str, arm_row: pd.Series) -> bool:
     probs = truth["funnel"][cond_key]
     p = probs["control"] if arm_row["variant"] == "A" else probs["variant"]
     return rng.random() < p
@@ -128,19 +124,17 @@ def _conversion_delay_days(rng: np.random.Generator, truth: dict) -> float:
     t = truth["timing"]["conversion_delay_days"]
     u = rng.random()
     if u < t["same_session_prob"]:
-        return rng.uniform(0, 1 / 24)          # < 1 hour
+        return rng.uniform(0, 1 / 24)  # < 1 hour
     u -= t["same_session_prob"]
     if u < t["within_1_day_prob"]:
-        return rng.uniform(1 / 24, 1)          # 1h - 1d
+        return rng.uniform(1 / 24, 1)  # 1h - 1d
     u -= t["within_1_day_prob"]
     if u < t["within_3_days_prob"]:
-        return rng.uniform(1, 3)               # 1 - 3d
-    return rng.uniform(3, 7)                   # 3 - 7d (window edge)
+        return rng.uniform(1, 3)  # 1 - 3d
+    return rng.uniform(3, 7)  # 3 - 7d (window edge)
 
 
-def _choose_fund(
-    rng: np.random.Generator, profile: str, variant: str
-) -> tuple[str, str]:
+def _choose_fund(rng: np.random.Generator, profile: str, variant: str) -> tuple[str, str]:
     """Return (fund_id, category).
 
     Variant B's quiz is *better aligned* to the risk profile (lower mismatch) but
@@ -162,15 +156,17 @@ def _choose_fund(
     return fund, category
 
 
-def simulate_events(
-    users: pd.DataFrame, truth: dict, rng: np.random.Generator
-) -> pd.DataFrame:
+def _tick(t: pd.Timestamp, lo: float, hi: float, rng: np.random.Generator) -> pd.Timestamp:
+    return t + pd.Timedelta(seconds=float(rng.uniform(lo, hi)))
+
+
+def simulate_events(users: pd.DataFrame, truth: dict, rng: np.random.Generator) -> pd.DataFrame:
     exp = truth["experiment"]
     rows: list[dict] = []
     counter = 0
 
     def emit(
-        user: pd.Series,
+        user: dict | pd.Series,
         session_id: str,
         ts: pd.Timestamp,
         name: str,
@@ -194,42 +190,47 @@ def simulate_events(
         )
         counter += 1
 
-    for _, user in users.iterrows():
+    records = users.to_dict("records") if isinstance(users, pd.DataFrame) else users
+    for user in records:
         session_id = f"sess_{user['user_id']}"
         t = user["assigned_at"]
-
-        def tick(lo: float, hi: float) -> pd.Timestamp:
-            return t + pd.Timedelta(seconds=float(rng.uniform(lo, hi)))
 
         emit(user, session_id, t, "viewed_kiwisaver_landing")
 
         if not _advance(rng, truth, "landing_to_started", user):
             continue
-        t = tick(20, 90)
+        t = _tick(t, 20, 90, rng)
         emit(user, session_id, t, "started_questionnaire")
 
         if not _advance(rng, truth, "started_to_completed_q", user):
             continue
-        t = tick(60, 240)
+        t = _tick(t, 60, 240, rng)
         emit(user, session_id, t, "completed_questionnaire")
 
         if not _advance(rng, truth, "completed_q_to_viewed_sel", user):
             continue
-        t = tick(3, 20)
+        t = _tick(t, 3, 20, rng)
         emit(user, session_id, t, "viewed_fund_selection")
         intervention_ts = t
 
+        rec_fund, rec_cat = None, None
         if user["variant"] == "A":
-            t = tick(60, 180)
+            t = _tick(t, 60, 180, rng)
             emit(
-                user, session_id, t, "browsed_fund_list",
+                user,
+                session_id,
+                t,
+                "browsed_fund_list",
                 {"funds_viewed": int(rng.integers(2, 11))},
             )
         else:
-            t = tick(60, 180)
-            rec_fund, _ = _choose_fund(rng, user["fund_risk_profile"], "B")
+            t = _tick(t, 60, 180, rng)
+            rec_fund, rec_cat = _choose_fund(rng, user["fund_risk_profile"], "B")
             emit(
-                user, session_id, t, "completed_risk_quiz",
+                user,
+                session_id,
+                t,
+                "completed_risk_quiz",
                 {"recommended_fund_id": rec_fund, "questions": 3},
             )
         intervention_ts = t
@@ -237,10 +238,21 @@ def simulate_events(
         if not _advance(rng, truth, "viewed_sel_to_selected", user):
             continue
 
-        fund_id, fund_cat = _choose_fund(rng, user["fund_risk_profile"], user["variant"])
+        if user["variant"] == "A":
+            fund_id, fund_cat = _choose_fund(rng, user["fund_risk_profile"], "A")
+        else:
+            # 90% accept the quiz's recommended fund (one-click confirm); 10% explore an override
+            if rng.random() < 0.90:
+                fund_id, fund_cat = rec_fund, rec_cat
+            else:
+                fund_id, fund_cat = _choose_fund(rng, user["fund_risk_profile"], "A")
+
         t = intervention_ts + pd.Timedelta(seconds=float(rng.uniform(20, 90)))
         emit(
-            user, session_id, t, "selected_base_fund",
+            user,
+            session_id,
+            t,
+            "selected_base_fund",
             {
                 "fund_id": fund_id,
                 "fund_risk": fund_cat,
@@ -286,8 +298,11 @@ def simulate_events(
                 np.exp(np.log(ln["median_nzd"]) + ln["sigma"] * rng.standard_normal() + shift)
             )
             emit(
-                user, session_id, submit_ts + pd.Timedelta(hours=float(rng.uniform(1, 48))),
-                "transfer_balance_set", {"amount_nzd": round(amount, 2)},
+                user,
+                session_id,
+                submit_ts + pd.Timedelta(hours=float(rng.uniform(1, 48))),
+                "transfer_balance_set",
+                {"amount_nzd": round(amount, 2)},
             )
 
         contrib_p = (
@@ -297,9 +312,11 @@ def simulate_events(
         )
         if rng.random() < contrib_p:
             emit(
-                user, session_id,
+                user,
+                session_id,
                 submit_ts + pd.Timedelta(days=float(rng.uniform(1, 30))),
-                "contribution_setup_completed", None,
+                "contribution_setup_completed",
+                None,
             )
 
         # --- 14-day regret guardrail ---
@@ -308,17 +325,32 @@ def simulate_events(
         if rng.random() < regret_p:
             new_fund, new_cat = _choose_fund(rng, user["fund_risk_profile"], user["variant"])
             emit(
-                user, session_id,
+                user,
+                session_id,
                 submit_ts + pd.Timedelta(days=float(rng.uniform(1, 14))),
                 "switched_base_fund",
                 {"from_fund_id": fund_id, "to_fund_id": new_fund, "to_risk": new_cat},
             )
 
-    return pd.DataFrame(rows, columns=[
-        "event_id", "user_id", "session_id", "event_timestamp", "event_name",
-        "experiment_id", "variant", "platform", "acquisition_channel",
-        "app_version", "metadata",
-    ])
+    df = pd.DataFrame(
+        rows,
+        columns=[
+            "event_id",
+            "user_id",
+            "session_id",
+            "event_timestamp",
+            "event_name",
+            "experiment_id",
+            "variant",
+            "platform",
+            "acquisition_channel",
+            "app_version",
+            "metadata",
+        ],
+    )
+    df = df.sort_values(["event_timestamp", "user_id"]).reset_index(drop=True)
+    df["event_id"] = [f"evt_{i:09d}" for i in range(len(df))]
+    return df
 
 
 def main() -> None:
@@ -340,11 +372,15 @@ def main() -> None:
 
     n_conv = (
         events[events.event_name == "submitted_application"]
-        .groupby("variant").size().reindex(["A", "B"]).fillna(0).astype(int)
+        .groupby("variant")
+        .size()
+        .reindex(["A", "B"])
+        .fillna(0)
+        .astype(int)
     )
     print(f"users={len(users):,}  events={len(events):,}")
     print(f"conversions: A={n_conv['A']:,}  B={n_conv['B']:,}")
-    print(f"-> {out/'users.parquet'}\n-> {out/'events.parquet'}")
+    print(f"-> {out / 'users.parquet'}\n-> {out / 'events.parquet'}")
 
 
 if __name__ == "__main__":

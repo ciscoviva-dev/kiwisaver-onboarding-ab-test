@@ -29,12 +29,14 @@ def _query(sql: str):
 
 def _ground_truth_lift() -> float:
     f = TRUTH["funnel"]
+
     def end_to_end(arm: str) -> float:
         return (
             f["viewed_sel_to_selected"][arm]
             * f["selected_to_confirmed"][arm]
             * f["confirmed_to_submitted"][arm]
         )
+
     return end_to_end("variant") - end_to_end("control")
 
 
@@ -53,9 +55,7 @@ def test_variant_b_is_significantly_better_on_primary():
 
 
 def test_guardrail_tension_is_present():
-    df = _query(
-        "select variant, fund_switch_regret_rate from mart_guardrails"
-    ).set_index("variant")
+    df = _query("select variant, fund_switch_regret_rate from mart_guardrails").set_index("variant")
     assert df.loc["B", "fund_switch_regret_rate"] > df.loc["A", "fund_switch_regret_rate"], (
         "the whole narrative depends on B having WORSE regret; the simulator regressed"
     )

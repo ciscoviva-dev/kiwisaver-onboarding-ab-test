@@ -1,116 +1,230 @@
 {
   "primary": {
     "A": {
-      "n": 9980,
-      "converted": 3946,
-      "rate": 0.39539078156312624,
-      "posterior_alpha": 3950.0,
-      "posterior_beta": 6040.0,
-      "posterior_mean": 0.3953953953953954,
+      "n": 9870,
+      "converted": 3933,
+      "rate": 0.3984802431610942,
+      "posterior_alpha": 3937.0,
+      "posterior_beta": 5943.0,
+      "posterior_mean": 0.39848178137651824,
       "credible_interval": [
-        0.38582339589460934,
-        0.40497682505285704
+        0.3888425627721705,
+        0.40812661804077516
       ]
     },
     "B": {
-      "n": 10023,
-      "converted": 4265,
-      "rate": 0.4255213010076823,
-      "posterior_alpha": 4269.0,
-      "posterior_beta": 5764.0,
-      "posterior_mean": 0.4254958636499552,
+      "n": 10164,
+      "converted": 4386,
+      "rate": 0.4315230224321133,
+      "posterior_alpha": 4390.0,
+      "posterior_beta": 5784.0,
+      "posterior_mean": 0.43149203852958523,
       "credible_interval": [
-        0.41581473010799375,
-        0.43516508637732676
+        0.421859818864685,
+        0.44110965568536936
       ]
     }
   },
   "decision": {
-    "prob_b_beats_a": 0.999985,
-    "expected_loss_choosing_b": 2.1322327749514202e-08,
-    "expected_loss_choosing_a": 0.030086774152501477,
-    "abs_lift_mean": 0.030086752830173723,
+    "prob_b_beats_a": 1.0,
+    "expected_loss_choosing_b": 0.0,
+    "expected_loss_choosing_a": 0.03299657780714933,
+    "abs_lift_mean": 0.03299657780714933,
     "abs_lift_ci": [
-      0.01652141849638855,
-      0.04372703877784258
+      0.019418513190391073,
+      0.04665163858803429
     ],
-    "rel_lift_mean": 0.0762566249168579,
+    "rel_lift_mean": 0.08297022285597977,
     "rel_lift_ci": [
-      0.041078758911151585,
-      0.11248956162571849
+      0.04790204705117743,
+      0.11908907151129933
     ],
-    "prob_lift_gt_1pp": 0.99813,
-    "prob_lift_gt_2pp": 0.92715,
-    "baseline_rate": 0.3953953953953954
+    "prob_lift_gt_1pp": 0.999525,
+    "prob_lift_gt_2pp": 0.96982,
+    "baseline_rate": 0.39848178137651824
   },
   "frequentist": {
-    "z": 4.331382732785646,
-    "p_value": 1.481758579635617e-05,
-    "abs_lift": 0.03013051944455608,
+    "z": 4.745091592907251,
+    "p_value": 2.084120093837072e-06,
+    "abs_lift": 0.03304277927101912,
     "ci95": [
-      0.016502838670217575,
-      0.04375820021889459
+      0.0194044220516031,
+      0.046681136490435135
     ]
   },
   "guardrails": {
     "A": {
-      "post_selection_abandonment_rate": 0.10751503006012024,
-      "fund_switch_regret_rate": 0.04206791687785099,
-      "fund_profile_mismatch_rate": 0.2080218778486782
+      "post_selection_abandonment_rate": 0.1083080040526849,
+      "post_selection_abandonment_reached_rate": 0.1083080040526849,
+      "post_selection_abandonment_selector_rate": 0.19568002928793704,
+      "fund_switch_regret_rate": 0.04220696669209255,
+      "fund_profile_mismatch_rate": 0.2022698151198975
     },
     "B": {
-      "post_selection_abandonment_rate": 0.14556520003990822,
-      "fund_switch_regret_rate": 0.09003516998827667,
-      "fund_profile_mismatch_rate": 0.10859437751004015
+      "post_selection_abandonment_rate": 0.14807162534435261,
+      "post_selection_abandonment_reached_rate": 0.14807162534435261,
+      "post_selection_abandonment_selector_rate": 0.2358564488324714,
+      "fund_switch_regret_rate": 0.0898312813497492,
+      "fund_profile_mismatch_rate": 0.128193073186021
+    }
+  },
+  "guardrail_posteriors": {
+    "abandonment_reached": {
+      "A": {
+        "n": 9870,
+        "converted": 1069,
+        "rate": 0.1083080040526849,
+        "posterior_alpha": 1070.0,
+        "posterior_beta": 8802.0,
+        "posterior_mean": 0.108387358184765,
+        "credible_interval": [
+          0.1023660312567783,
+          0.11456518596463658
+        ]
+      },
+      "B": {
+        "n": 10164,
+        "converted": 1505,
+        "rate": 0.14807162534435261,
+        "posterior_alpha": 1506.0,
+        "posterior_beta": 8660.0,
+        "posterior_mean": 0.14814086169584892,
+        "credible_interval": [
+          0.14129652883365273,
+          0.15514917322443664
+        ]
+      },
+      "prob_b_higher": 1.0
+    },
+    "abandonment_selector": {
+      "A": {
+        "n": 5463,
+        "converted": 1069,
+        "rate": 0.19568002928793704,
+        "posterior_alpha": 1070.0,
+        "posterior_beta": 4395.0,
+        "posterior_mean": 0.19579139981701738,
+        "credible_interval": [
+          0.18542097470031302,
+          0.20643767493935009
+        ]
+      },
+      "B": {
+        "n": 6381,
+        "converted": 1505,
+        "rate": 0.2358564488324714,
+        "posterior_alpha": 1506.0,
+        "posterior_beta": 4877.0,
+        "posterior_mean": 0.23593921353595487,
+        "credible_interval": [
+          0.2256129349835307,
+          0.2464282250086806
+        ]
+      },
+      "prob_b_higher": 1.0
+    },
+    "regret_14d": {
+      "A": {
+        "n": 3933,
+        "converted": 166,
+        "rate": 0.04220696669209255,
+        "posterior_alpha": 167.0,
+        "posterior_beta": 3768.0,
+        "posterior_mean": 0.04243964421855146,
+        "credible_interval": [
+          0.03639099147952416,
+          0.048964263138715006
+        ]
+      },
+      "B": {
+        "n": 4386,
+        "converted": 394,
+        "rate": 0.0898312813497492,
+        "posterior_alpha": 395.0,
+        "posterior_beta": 3993.0,
+        "posterior_mean": 0.09001823154056518,
+        "credible_interval": [
+          0.08175534269652096,
+          0.09866614573789702
+        ]
+      },
+      "prob_b_higher": 1.0
+    },
+    "fund_mismatch": {
+      "A": {
+        "n": 5463,
+        "converted": 1105,
+        "rate": 0.2022698151198975,
+        "posterior_alpha": 1106.0,
+        "posterior_beta": 4359.0,
+        "posterior_mean": 0.20237877401646845,
+        "credible_interval": [
+          0.191865609585031,
+          0.21322003452205956
+        ]
+      },
+      "B": {
+        "n": 6381,
+        "converted": 818,
+        "rate": 0.128193073186021,
+        "posterior_alpha": 819.0,
+        "posterior_beta": 5564.0,
+        "posterior_mean": 0.12830957230142567,
+        "credible_interval": [
+          0.12020923758946259,
+          0.1366309063486311
+        ]
+      },
+      "prob_b_higher": 0.0
     }
   },
   "commercial": {
-    "expected_aum_per_converter_nzd": 18230.490603142396,
-    "annual_revenue_per_member_nzd": 136.72867952356796,
-    "npv5_per_member_nzd": 521.5074360220258,
-    "incremental_members_annual": 15713.270347432228,
-    "first_year_revenue_full_rollout_nzd": 2148454.7056012447,
-    "npv5_full_rollout_nzd": 8194587.330410307,
-    "npv5_staged_25pct_nzd": 2048646.8326025768,
+    "expected_aum_per_converter_nzd": 17635.024566488646,
+    "annual_revenue_per_member_nzd": 132.26268424866484,
+    "npv5_per_member_nzd": 504.4733378853598,
+    "incremental_members_annual": 17258.739254942353,
+    "first_year_revenue_full_rollout_nzd": 2282687.1806064774,
+    "npv5_full_rollout_nzd": 8706573.799633857,
+    "npv5_staged_25pct_nzd": 2176643.449908464,
     "staged_exposure": 0.25
   },
-  "exec_summary": "Variant B lifts sign-up conversion from 39.54% to 42.55% (+3.01%, 95% CrI +1.65% to +4.37%), with a 100.0% probability of being the better arm. That is worth about 2,048,647 NZD in 5-year NPV at a staged 25% rollout (~15,713 members/yr annualised). But B also raises post-selection abandonment from 10.8% to 14.6% and 14-day fund-switch regret from 4.2% to 9.0% (it *improves* fund fit). Recommendation: Stage the rollout to 25% with a confirmation-step reassurance, then re-evaluate before scaling to 50% and 100%.",
+  "exec_summary": "Variant B lifts sign-up conversion from 39.85% to 43.15% (+3.30%, 95% CrI +1.94% to +4.67%), with a 100.0% probability of being the better arm. That is worth about 2,176,643 NZD in 5-year NPV at a staged 25% rollout (~17,259 members/yr annualised). But B also raises post-selection abandonment from 10.8% to 14.8% and 14-day fund-switch regret from 4.2% to 9.0% (it *improves* fund fit). Recommendation: Stage the rollout to 25% with a confirmation-step reassurance, then re-evaluate before scaling to 50% and 100%.",
   "summary_payload": {
     "primary": {
-      "control_rate": 0.3954,
-      "variant_rate": 0.4255
+      "control_rate": 0.3985,
+      "variant_rate": 0.4315
     },
     "decision": {
-      "abs_lift": 0.0301,
+      "abs_lift": 0.033,
       "abs_lift_ci95": [
-        0.0165,
-        0.0437
+        0.0194,
+        0.0467
       ],
       "prob_b_beats_a": 1.0,
       "expected_loss_choosing_b": 0.0
     },
     "frequentist": {
-      "z": 4.33,
-      "p_value": 1.481758579635617e-05
+      "z": 4.75,
+      "p_value": 2.084120093837072e-06
     },
     "guardrails": {
       "abandonment": {
-        "A": 0.1075,
-        "B": 0.1456
+        "A": 0.1083,
+        "B": 0.1481
       },
       "regret_14d": {
-        "A": 0.0421,
-        "B": 0.09
+        "A": 0.0422,
+        "B": 0.0898
       },
       "fund_mismatch": {
-        "A": 0.208,
-        "B": 0.1086
+        "A": 0.2023,
+        "B": 0.1282
       }
     },
     "commercial": {
-      "incremental_members_annual": 15713,
-      "npv5_full_rollout_nzd": 8194587,
-      "npv5_staged_25pct_nzd": 2048647
+      "incremental_members_annual": 17259,
+      "npv5_full_rollout_nzd": 8706574,
+      "npv5_staged_25pct_nzd": 2176643
     },
     "recommendation": "Stage the rollout to 25% with a confirmation-step reassurance, then re-evaluate before scaling to 50% and 100%."
   },

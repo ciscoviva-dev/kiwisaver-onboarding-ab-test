@@ -39,6 +39,18 @@ models:
           - accepted_values:
               arguments:
                 values: ["A", "B"]
+      - name: post_selection_abandonment_reached_rate
+        data_tests:
+          - not_null
+      - name: post_selection_abandonment_selector_rate
+        data_tests:
+          - not_null
+      - name: fund_switch_regret_rate
+        data_tests:
+          - not_null
+      - name: fund_profile_mismatch_rate
+        data_tests:
+          - not_null
 
   - name: mart_cohorts
     description: "Conversion by cohort segment (risk profile, new/existing, device, age)."

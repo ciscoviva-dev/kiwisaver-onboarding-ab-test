@@ -8,21 +8,23 @@ experiment design, Bayesian inference, readable notebooks, and a
 
 > ### TL;DR
 > Replacing the fund-list browse step with a **3-question risk quiz (Variant B)**
-> lifts sign-up conversion from **39.5% → 42.6%** (**+3.0pp**, 95% CrI +1.7 to
-> +4.4; **P(B>A) = 99.99%**), worth an estimated **+15,700 members/yr and
-> ~$8.2M in 5-year NPV** at full rollout.
+> lifts sign-up conversion from **39.8% → 43.2%** (**+3.3pp**, 95% CrI +1.9 to
+> +4.7; **P(B>A) = 100.0%**), worth an estimated **+17,300 members/yr and
+> ~$8.7M in 5-year NPV** at full rollout.
 >
-> **But** B also raises post-selection abandonment (10.8% → 14.6%) and 14-day
-> fund-switch regret (4.2% → 9.0%, **2.1×**), while *improving* fund fit.
+> **But** B also raises post-selection abandonment (10.8% → 14.8%) and 14-day
+> fund-switch regret (4.2% → 9.0%, **2.1×**), while *improving* fund fit (20.2% → 12.8%).
 >
 > **Recommendation: stage the rollout to 25%**, add a confirmation-step
-> reassurance, and re-evaluate — not ship to 100%. The full reasoning and an
-> the notebooks under [`docs/`](docs/index.html) walk through it in plain English.
+> reassurance, and re-evaluate — not ship to 100%. The full reasoning and
+> the notebooks walk through it in plain English.
 
-📓 **Read the analysis (plain English):** [`docs/index.html`](docs/index.html) —
-executed notebooks covering an EDA pass, the full A/B test, and an extension into
-**multi-armed bandits / Thompson sampling** and the **"peeking" problem**. No
-stats background needed.
+📓 **Read the analysis notebooks directly on GitHub:**
+- [`01_eda.ipynb`](notebooks/01_eda.ipynb) — first look at the data, funnel drop-offs, and assignment check.
+- [`02_ab_test.ipynb`](notebooks/02_ab_test.ipynb) — Bayesian A/B test, decision loss, guardrails, and commercial model.
+- [`03_bandits_and_peeking.ipynb`](notebooks/03_bandits_and_peeking.ipynb) — multi-armed bandits, Thompson sampling, and the peeking simulation.
+
+🌐 **Browser-ready HTML portal:** [`docs/index.html`](docs/index.html) (pre-rendered, zero setup needed).
 
 🖼️ **Deck-ready one-slide summary:** [`reports/figures/one_slide_summary.png`](reports/figures/one_slide_summary.png)
 
@@ -116,13 +118,14 @@ uncertainty"** — expected loss answers that directly.
 
 | Metric | A (control) | B (quiz) | Effect |
 |---|---|---|---|
-| **Conversion (primary)** | 39.5% | **42.6%** | **+3.0pp** (95% CrI +1.7 to +4.4), rel +7.6% |
-| P(B > A) | — | — | **99.99%** |
+| **Conversion (primary)** | 39.8% | **43.2%** | **+3.3pp** (95% CrI +1.9 to +4.7), rel +8.3% |
+| P(B > A) | — | — | **100.0%** |
 | Expected loss of choosing B | — | — | **~0.00pp** |
-| Frequentist cross-check | — | — | z = 4.33, p = 1.5e-5 |
-| Post-selection abandonment | 10.8% | 14.6% | worse |
-| 14-day fund-switch regret | 4.2% | 9.0% | **2.1× worse** |
-| Fund/profile mismatch | 20.8% | **10.9%** | **better** |
+| Frequentist cross-check | — | — | z = 4.75, p = 2.1e-6 |
+| Post-selection abandonment (% of reached) | 10.8% | 14.8% | worse (95% CrI +3.1pp to +4.8pp) |
+| Post-selection abandonment (% of selectors) | 19.6% | 23.6% | worse (95% CrI +2.4pp to +5.6pp) |
+| 14-day fund-switch regret | 4.2% | 9.0% | **2.1× worse** (95% CrI +3.7pp to +5.8pp) |
+| Fund/profile mismatch | 20.2% | **12.8%** | **better** (95% CrI -8.9pp to -5.9pp) |
 
 **The interesting bit.** B is a near-certain win on conversion and even
 *improves* fund fit — yet it raises regret. The mechanism isn't a bad
@@ -141,13 +144,13 @@ regret, which reinforces the staged approach.
 
 KiwiSaver revenue is a **provider margin**, not the gross fund charge, so the
 model uses a documented blended `0.75%` revenue rate on AUM (see
-[`assumptions.md`](assumptions.md)). Expected AUM per converter ≈ **$18.2k**.
+[`assumptions.md`](assumptions.md)). Expected AUM per converter ≈ **$18.1k**.
 
 | | Full rollout | Staged 25% |
 |---|---|---|
-| Incremental members / yr | ~15,700 | ~3,900 |
-| First-year revenue | ~$2.15M | ~$0.54M |
-| **5-year NPV** | **~$8.19M** | **~$2.05M** |
+| Incremental members / yr | ~17,300 | ~4,300 |
+| First-year revenue | ~$2.36M | ~$0.59M |
+| **5-year NPV** | **~$8.71M** | **~$2.18M** |
 
 ## 6. Recommendation
 

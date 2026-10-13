@@ -10,7 +10,12 @@ Usage:
 
 from __future__ import annotations
 
+import asyncio
+import sys
 from pathlib import Path
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 import nbformat
 from nbconvert import HTMLExporter
@@ -21,12 +26,21 @@ NB_DIR = ROOT / "notebooks"
 OUT_DIR = ROOT / "docs"
 
 NOTEBOOKS = [
-    ("01_eda.ipynb", "First look at the data (EDA)",
-     "Who the users are, where they drop off, and whether the experiment split was fair."),
-    ("02_ab_test.ipynb", "Did the quiz help? (A/B test)",
-     "The Bayesian result in plain English: how sure we are, the side effects, the money, and the recommendation."),
-    ("03_bandits_and_peeking.ipynb", "Bandits & the 'peeking' problem",
-     "Explore/exploit and Thompson sampling, plus a simulation showing why 'Bayesian' doesn't let you peek for free."),
+    (
+        "01_eda.ipynb",
+        "First look at the data (EDA)",
+        "Who the users are, where they drop off, and whether the experiment split was fair.",
+    ),
+    (
+        "02_ab_test.ipynb",
+        "Did the quiz help? (A/B test)",
+        "The Bayesian result in plain English: how sure we are, the side effects, the money, and the recommendation.",
+    ),
+    (
+        "03_bandits_and_peeking.ipynb",
+        "Bandits & the 'peeking' problem",
+        "Explore/exploit and Thompson sampling, plus a simulation showing why 'Bayesian' doesn't let you peek for free.",
+    ),
 ]
 
 
@@ -45,8 +59,12 @@ def render(nb_path: Path, save_outputs: bool = True) -> str:
 
 def index_page() -> str:
     cards = "\n".join(
-        f'      <a class="card" href="{name.replace(".ipynb", ".html")}">'
-        f'<h3>{title}</h3><p>{desc}</p></a>'
+        f'      <div class="card">'
+        f'<a class="card-link" href="{name.replace(".ipynb", ".html")}">'
+        f"<h3>{title}</h3><p>{desc}</p></a>"
+        f'<div class="card-meta"><a href="{name.replace(".ipynb", ".html")}">Read HTML Report &rarr;</a> &middot; '
+        f'<a href="https://github.com/ciscoviva-dev/kiwisaver-onboarding-ab-test/blob/main/notebooks/{name}" target="_blank">View .ipynb on GitHub &nearr;</a></div>'
+        f"</div>"
         for name, title, desc in NOTEBOOKS
     )
     return f"""<!doctype html>
@@ -55,17 +73,22 @@ def index_page() -> str:
 <title>KiwiSaver onboarding A/B test — notebooks</title>
 <style>
   body {{ font-family: -apple-system, Segoe UI, Roboto, sans-serif; margin: 0;
-         background:#0f172a; color:#e2e8f0; }}
+         background:#0f172a; color:#e2e8f0; line-height: 1.5; }}
   main {{ max-width: 820px; margin: 0 auto; padding: 48px 24px; }}
   h1 {{ font-size: 28px; margin-bottom: 6px; }}
   .sub {{ color:#94a3b8; margin-bottom: 28px; }}
-  .card {{ display:block; text-decoration:none; color:inherit; background:#1e293b;
-          border:1px solid #334155; border-radius:12px; padding:18px 20px; margin:14px 0; }}
+  .card {{ background:#1e293b; border:1px solid #334155; border-radius:12px;
+           padding:20px; margin:16px 0; transition: border-color 0.2s; }}
   .card:hover {{ border-color:#2dd4bf; }}
-  .card h3 {{ margin:0 0 6px; color:#2dd4bf; }}
-  .card p {{ margin:0; color:#94a3b8; font-size:14px; }}
-  footer {{ color:#64748b; font-size:13px; margin-top:28px; }}
-  a {{ color:#38bdf8; }}
+  .card-link {{ display:block; text-decoration:none; color:inherit; }}
+  .card h3 {{ margin:0 0 6px; color:#2dd4bf; font-size: 20px; }}
+  .card p {{ margin:0 0 12px; color:#94a3b8; font-size:14px; }}
+  .card-meta {{ font-size: 13px; color: #64748b; border-top: 1px solid #334155; padding-top: 10px; margin-top: 10px; }}
+  .card-meta a {{ color: #38bdf8; text-decoration: none; font-weight: 500; }}
+  .card-meta a:hover {{ text-decoration: underline; }}
+  footer {{ color:#64748b; font-size:13px; margin-top:36px; border-top: 1px solid #334155; padding-top: 20px; }}
+  footer a {{ color:#38bdf8; text-decoration: none; }}
+  footer a:hover {{ text-decoration: underline; }}
 </style></head>
 <body><main>
   <h1>KiwiSaver onboarding A/B test</h1>
@@ -73,7 +96,7 @@ def index_page() -> str:
 {cards}
   <footer>
     Personal portfolio project; not affiliated with Sharesies. All data synthetic.<br>
-    <a href="https://github.com/ciscoviva-dev/kiwisaver-onboarding-ab-test">View the repository</a>
+    <a href="https://github.com/ciscoviva-dev/kiwisaver-onboarding-ab-test">View the repository on GitHub</a>
   </footer>
 </main></body></html>
 """

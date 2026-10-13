@@ -36,18 +36,18 @@ from scipy import stats
 # --- modelling configuration (analysis-time, not ground truth) ---------------
 ANALYSIS_SEED = 20261013
 N_DRAWS = 200_000
-PRIOR_A0, PRIOR_B0 = 4.0, 6.0          # weakly informative, mean 0.40
-SENS_A0, SENS_B0 = 1.0, 1.0            # uninformative sensitivity prior
+PRIOR_A0, PRIOR_B0 = 4.0, 6.0  # weakly informative, mean 0.40
+SENS_A0, SENS_B0 = 1.0, 1.0  # uninformative sensitivity prior
 CRED = 0.95
 
 # --- commercial assumptions (see assumptions.md) -----------------------------
-PLATFORM_REVENUE_RATE = 0.0075   # blended provider margin + self-select admin
+PLATFORM_REVENUE_RATE = 0.0075  # blended provider margin + self-select admin
 RETENTION_ANNUAL = 0.92
 DISCOUNT_RATE = 0.08
 BALANCE_GROWTH = 0.06
 HORIZON_YEARS = 5
 EXPERIMENT_DAYS = 14
-STAGED_EXPOSURE = 0.25           # headline recommendation: roll to 25%
+STAGED_EXPOSURE = 0.25  # headline recommendation: roll to 25%
 
 BLUE, ORANGE, GREY = "#2b6cb0", "#dd6b20", "#718096"
 
@@ -102,17 +102,20 @@ def frequentist_crosscheck(y_a, n_a, y_b, n_b) -> dict:
     p_value = 2 * (1 - stats.norm.cdf(abs(z)))
     se_unpooled = np.sqrt(p_a * (1 - p_a) / n_a + p_b * (1 - p_b) / n_b)
     diff = p_b - p_a
+    crit = float(stats.norm.ppf(1 - (1 - CRED) / 2))
     return {
         "z": float(z),
         "p_value": float(p_value),
         "abs_lift": float(diff),
-        "ci95": [float(diff - 1.96 * se_unpooled), float(diff + 1.96 * se_unpooled)],
+        "ci95": [float(diff - crit * se_unpooled), float(diff + crit * se_unpooled)],
     }
 
 
 def npv5(annual_revenue: float) -> float:
     return sum(
-        annual_revenue * (1 + BALANCE_GROWTH) ** (t - 1) * RETENTION_ANNUAL ** (t - 1)
+        annual_revenue
+        * (1 + BALANCE_GROWTH) ** (t - 1)
+        * RETENTION_ANNUAL ** (t - 1)
         / (1 + DISCOUNT_RATE) ** t
         for t in range(1, HORIZON_YEARS + 1)
     )
@@ -123,7 +126,8 @@ def commercial_model(primary: dict, commercial: dict) -> dict:
     annual_reached = reached * (365 / EXPERIMENT_DAYS)
     lift = primary["B"]["rate"] - primary["A"]["rate"]
 
-    # expected AUM per converter (balances only apply to a subset)
+    # Expected AUM per converter is anchored on Control (A) baseline metrics to
+    # cleanly isolate incremental sign-up volume from secondary lognormal balance sample variance.
     c = commercial
     aum = (c["converters_with_balance"] / c["converters"]) * c["mean_transfer_balance_nzd"]
     annual_rev_per_member = aum * PLATFORM_REVENUE_RATE
@@ -136,7 +140,9 @@ def commercial_model(primary: dict, commercial: dict) -> dict:
         "incremental_members_annual": float(delta_members_annual),
         "first_year_revenue_full_rollout_nzd": float(delta_members_annual * annual_rev_per_member),
         "npv5_full_rollout_nzd": float(delta_members_annual * npv5(annual_rev_per_member)),
-        "npv5_staged_25pct_nzd": float(delta_members_annual * npv5(annual_rev_per_member) * STAGED_EXPOSURE),
+        "npv5_staged_25pct_nzd": float(
+            delta_members_annual * npv5(annual_rev_per_member) * STAGED_EXPOSURE
+        ),
         "staged_exposure": STAGED_EXPOSURE,
     }
 
@@ -148,8 +154,9 @@ RECOMMENDATION = (
 )
 
 
-def summary_payload(primary: dict, decision: dict, freq: dict,
-                    guard: dict, commercial: dict) -> dict:
+def summary_payload(
+    primary: dict, decision: dict, freq: dict, guard: dict, commercial: dict
+) -> dict:
     """Assemble the exact numbers the summary is allowed to use."""
     return {
         "primary": {
@@ -158,16 +165,22 @@ def summary_payload(primary: dict, decision: dict, freq: dict,
         },
         "decision": {
             "abs_lift": round(decision["abs_lift_mean"], 4),
-            "abs_lift_ci95": [round(decision["abs_lift_ci"][0], 4),
-                              round(decision["abs_lift_ci"][1], 4)],
+            "abs_lift_ci95": [
+                round(decision["abs_lift_ci"][0], 4),
+                round(decision["abs_lift_ci"][1], 4),
+            ],
             "prob_b_beats_a": round(decision["prob_b_beats_a"], 4),
             "expected_loss_choosing_b": round(decision["expected_loss_choosing_b"], 6),
         },
         "frequentist": {"z": round(freq["z"], 2), "p_value": freq["p_value"]},
         "guardrails": {
-            "abandonment": {k: round(v["post_selection_abandonment_rate"], 4) for k, v in guard.items()},
+            "abandonment": {
+                k: round(v["post_selection_abandonment_rate"], 4) for k, v in guard.items()
+            },
             "regret_14d": {k: round(v["fund_switch_regret_rate"], 4) for k, v in guard.items()},
-            "fund_mismatch": {k: round(v["fund_profile_mismatch_rate"], 4) for k, v in guard.items()},
+            "fund_mismatch": {
+                k: round(v["fund_profile_mismatch_rate"], 4) for k, v in guard.items()
+            },
         },
         "commercial": {
             "incremental_members_annual": round(commercial["incremental_members_annual"]),
@@ -198,12 +211,21 @@ def deterministic_summary(p: dict) -> str:
 def fig_prior_posterior(arm_a, arm_b, out: Path) -> None:
     xs = np.linspace(0.30, 0.52, 1000)
     fig, ax = plt.subplots(figsize=(7, 4.2), dpi=150)
-    ax.plot(xs, stats.beta.pdf(xs, PRIOR_A0, PRIOR_B0), color=GREY, ls="--",
-            label=f"Prior Beta({PRIOR_A0:g},{PRIOR_B0:g})")
+    ax.plot(
+        xs,
+        stats.beta.pdf(xs, PRIOR_A0, PRIOR_B0),
+        color=GREY,
+        ls="--",
+        label=f"Prior Beta({PRIOR_A0:g},{PRIOR_B0:g})",
+    )
     for arm, color, label in [(arm_a, BLUE, "A (control)"), (arm_b, ORANGE, "B (quiz)")]:
-        ax.plot(xs, stats.beta.pdf(xs, arm["posterior_alpha"], arm["posterior_beta"]),
-                color=color, lw=2, label=f"{label} posterior")
-        lo, hi = arm["credible_interval"]
+        ax.plot(
+            xs,
+            stats.beta.pdf(xs, arm["posterior_alpha"], arm["posterior_beta"]),
+            color=color,
+            lw=2,
+            label=f"{label} posterior",
+        )
         ax.axvline(arm["posterior_mean"], color=color, lw=0.8, alpha=0.5)
     ax.set_xlabel("Conversion rate (within 7 days of fund selection)")
     ax.set_ylabel("Density")
@@ -211,6 +233,7 @@ def fig_prior_posterior(arm_a, arm_b, out: Path) -> None:
     ax.legend(frameon=False, fontsize=8)
     fig.tight_layout()
     fig.savefig(out / "fig_prior_posterior.png")
+    fig.savefig(out / "fig_prior_posterior.svg")
     plt.close(fig)
 
 
@@ -238,12 +261,17 @@ def fig_cumulative(users_df, out: Path) -> None:
     ax.legend(frameon=False, fontsize=8)
     fig.tight_layout()
     fig.savefig(out / "fig_cumulative_conversion.png")
+    fig.savefig(out / "fig_cumulative_conversion.svg")
     plt.close(fig)
 
 
 def fig_guardrails(guard: dict, out: Path) -> None:
     labels = ["Post-selection\nabandonment", "14-day\nfund-switch regret", "Fund/profile\nmismatch"]
-    keys = ["post_selection_abandonment_rate", "fund_switch_regret_rate", "fund_profile_mismatch_rate"]
+    keys = [
+        "post_selection_abandonment_rate",
+        "fund_switch_regret_rate",
+        "fund_profile_mismatch_rate",
+    ]
     a = [guard["A"][k] for k in keys]
     b = [guard["B"][k] for k in keys]
     x = np.arange(len(labels))
@@ -258,6 +286,7 @@ def fig_guardrails(guard: dict, out: Path) -> None:
     ax.legend(frameon=False, fontsize=8)
     fig.tight_layout()
     fig.savefig(out / "fig_guardrails.png")
+    fig.savefig(out / "fig_guardrails.svg")
     plt.close(fig)
 
 
@@ -270,7 +299,8 @@ def fig_cohorts(cohorts, out: Path) -> None:
     for i, (variant, color) in enumerate([("A", BLUE), ("B", ORANGE)]):
         vals = [
             float(sub[(sub.segment == s) & (sub.variant == variant)]["conversion_rate"].iloc[0])
-            if len(sub[(sub.segment == s) & (sub.variant == variant)]) else 0.0
+            if len(sub[(sub.segment == s) & (sub.variant == variant)])
+            else 0.0
             for s in order
         ]
         ax.bar(x + (i - 0.5) * w, vals, w, color=color, label=f"Variant {variant}")
@@ -281,16 +311,16 @@ def fig_cohorts(cohorts, out: Path) -> None:
     ax.legend(frameon=False, fontsize=8)
     fig.tight_layout()
     fig.savefig(out / "fig_cohorts.png")
+    fig.savefig(out / "fig_cohorts.svg")
     plt.close(fig)
 
 
 def main() -> None:
+    import contextlib
     import sys
 
-    try:
+    with contextlib.suppress(Exception):
         sys.stdout.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--db", default="warehouse.duckdb")
     ap.add_argument("--out", default="reports")
@@ -307,10 +337,20 @@ def main() -> None:
     cohorts = q(db, "select * from mart_cohorts")
 
     rng = np.random.default_rng(ANALYSIS_SEED)
-    arm_a = summarize_arm(int(primary_df.loc["A", "converted_users"]),
-                          int(primary_df.loc["A", "reached_selection_users"]), rng, PRIOR_A0, PRIOR_B0)
-    arm_b = summarize_arm(int(primary_df.loc["B", "converted_users"]),
-                          int(primary_df.loc["B", "reached_selection_users"]), rng, PRIOR_A0, PRIOR_B0)
+    arm_a = summarize_arm(
+        int(primary_df.loc["A", "converted_users"]),
+        int(primary_df.loc["A", "reached_selection_users"]),
+        rng,
+        PRIOR_A0,
+        PRIOR_B0,
+    )
+    arm_b = summarize_arm(
+        int(primary_df.loc["B", "converted_users"]),
+        int(primary_df.loc["B", "reached_selection_users"]),
+        rng,
+        PRIOR_A0,
+        PRIOR_B0,
+    )
     decision = decision_outputs(arm_a["_draws"], arm_b["_draws"], arm_a["posterior_mean"])
     freq = frequentist_crosscheck(arm_a["converted"], arm_a["n"], arm_b["converted"], arm_b["n"])
 
@@ -324,10 +364,41 @@ def main() -> None:
     )
 
     guard = {
-        v: {k: float(guard_df.loc[v, k]) for k in
-            ["post_selection_abandonment_rate", "fund_switch_regret_rate", "fund_profile_mismatch_rate"]}
+        v: {
+            "post_selection_abandonment_rate": float(
+                guard_df.loc[v, "post_selection_abandonment_rate"]
+            ),
+            "post_selection_abandonment_reached_rate": float(
+                guard_df.loc[v, "post_selection_abandonment_reached_rate"]
+            ),
+            "post_selection_abandonment_selector_rate": float(
+                guard_df.loc[v, "post_selection_abandonment_selector_rate"]
+            ),
+            "fund_switch_regret_rate": float(guard_df.loc[v, "fund_switch_regret_rate"]),
+            "fund_profile_mismatch_rate": float(guard_df.loc[v, "fund_profile_mismatch_rate"]),
+        }
         for v in ["A", "B"]
     }
+
+    clean = lambda d: {k: v for k, v in d.items() if not k.startswith("_")}
+    guard_bayes = {}
+    for key, num_col, den_col in [
+        ("abandonment_reached", "abandoned_users", "reached_selection_users"),
+        ("abandonment_selector", "abandoned_users", "selector_users"),
+        ("regret_14d", "switched_users", "converted_users"),
+        ("fund_mismatch", "mismatched_users", "selector_users"),
+    ]:
+        ga = summarize_arm(
+            int(guard_df.loc["A", num_col]), int(guard_df.loc["A", den_col]), rng, SENS_A0, SENS_B0
+        )
+        gb = summarize_arm(
+            int(guard_df.loc["B", num_col]), int(guard_df.loc["B", den_col]), rng, SENS_A0, SENS_B0
+        )
+        guard_bayes[key] = {
+            "A": clean(ga),
+            "B": clean(gb),
+            "prob_b_higher": float(np.mean(gb["_draws"] > ga["_draws"])),
+        }
 
     # figures
     figdir = out / "figures"
@@ -340,12 +411,12 @@ def main() -> None:
     payload = summary_payload({"A": arm_a, "B": arm_b}, decision, freq, guard, commercial)
 
     # serialise (drop internal draws)
-    clean = lambda d: {k: v for k, v in d.items() if not k.startswith("_")}
     results = {
         "primary": {"A": clean(arm_a), "B": clean(arm_b)},
         "decision": decision,
         "frequentist": freq,
         "guardrails": guard,
+        "guardrail_posteriors": guard_bayes,
         "commercial": commercial,
         "exec_summary": deterministic_summary(payload),
         "summary_payload": payload,
@@ -367,18 +438,26 @@ def main() -> None:
         deterministic_summary(payload),
         "",
         "---",
-        f"- **Primary conversion**: A = {arm_a['rate']:.2%}, B = {arm_b['rate']:.2%}"
-        f" (absolute lift **{d['abs_lift_mean']:+.2%}**, 95% CrI "
-        f"{d['abs_lift_ci'][0]:+.2%} to {d['abs_lift_ci'][1]:+.2%})",
-        f"- **P(B > A)** = {d['prob_b_beats_a']:.3%}  |  "
-        f"expected loss of choosing B = {d['expected_loss_choosing_b']:.4%}",
+        (
+            f"- **Primary conversion**: A = {arm_a['rate']:.2%}, B = {arm_b['rate']:.2%}"
+            f" (absolute lift **{d['abs_lift_mean']:+.2%}**, 95% CrI "
+            f"{d['abs_lift_ci'][0]:+.2%} to {d['abs_lift_ci'][1]:+.2%})"
+        ),
+        (
+            f"- **P(B > A)** = {d['prob_b_beats_a']:.3%}  |  "
+            f"expected loss of choosing B = {d['expected_loss_choosing_b']:.4%}"
+        ),
         f"- **Frequentist cross-check**: z = {freq['z']:.2f}, p = {freq['p_value']:.2e}",
-        f"- **Guardrails**: abandonment {guard['A']['post_selection_abandonment_rate']:.1%} -> "
-        f"{guard['B']['post_selection_abandonment_rate']:.1%}; "
-        f"regret {guard['A']['fund_switch_regret_rate']:.1%} -> {guard['B']['fund_switch_regret_rate']:.1%}",
-        f"- **Commercial**: +{commercial['incremental_members_annual']:,.0f} members/yr;"
-        f" 5-yr NPV ~ ${commercial['npv5_full_rollout_nzd']:,.0f} (full) /"
-        f" ${commercial['npv5_staged_25pct_nzd']:,.0f} (staged 25%)",
+        (
+            f"- **Guardrails**: abandonment {guard['A']['post_selection_abandonment_rate']:.1%} -> "
+            f"{guard['B']['post_selection_abandonment_rate']:.1%}; "
+            f"regret {guard['A']['fund_switch_regret_rate']:.1%} -> {guard['B']['fund_switch_regret_rate']:.1%}"
+        ),
+        (
+            f"- **Commercial**: +{commercial['incremental_members_annual']:,.0f} members/yr;"
+            f" 5-yr NPV ~ ${commercial['npv5_full_rollout_nzd']:,.0f} (full) /"
+            f" ${commercial['npv5_staged_25pct_nzd']:,.0f} (staged 25%)"
+        ),
     ]
     (out / "summary.md").write_text("\n".join(lines), encoding="utf-8")
 
